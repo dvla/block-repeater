@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 ##
-# Meta-programming method to replace simple condition blocks
+# Additional methods for the Repeater class
 #
 module RepeaterMethods
   UNTIL_METHOD_REGEX = /until_((.*)_becomes_(.*)|(.*))/.freeze
@@ -28,17 +28,17 @@ module RepeaterMethods
       third_match = Regexp.last_match(3)
 
       if second_match && third_match
-        self.until do |result|
+        final_result = self.until do |result|
           call_output = call_if_method_responsive(result, second_match)
-          call_if_method_responsive(call_output, third_match) unless call_output.nil?
+          call_if_method_responsive(call_output, third_match) if @unresponsive_errors.empty?
         end
       else
-        self.until do |result|
+        final_result = self.until do |result|
           call_if_method_responsive(result, first_match)
         end
       end
-
-      raise "Methods were not compatible: #{@unresponsive_errors}" unless @unresponsive_errors.empty?
+      raise "Methods were not compatible: #{@unresponsive_errors.join(',')}" unless @unresponsive_errors.empty?
+      final_result
     else
       super
     end
@@ -48,12 +48,15 @@ module RepeaterMethods
     method_name.match UNTIL_METHOD_REGEX || super
   end
 
+
+
+  # ISSUE: Returns nil instead of the result of the method call
   def call_if_method_responsive(value, method)
     method = method.to_sym
     if value.respond_to?(method)
       value.send(method)
-    elsif value.respond_to?(method)
-      @unresponsive_errors << "#{value.inspect} of class #{value.class.name} does not respond to method: #{method}"
+    else
+      @unresponsive_errors << "#{value.inspect} of class #{value.class.name} does not respond to method #{method}"
     end
   end
 end

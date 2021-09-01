@@ -30,16 +30,16 @@ module BlockRepeater
     # @param **_ - Capture any extra keyword arguments and discard them
     # @return The result of calling the main block the final time
     def repeat(times: 25, delay: 0.2, **_)
-      result, condition_met, exception = nil
+      result, @condition_met, exception = nil
       times.times do
         result = @repeat_block.call
         begin
-          condition_met = @condition_block.call(result) if @condition_block
+          @condition_met = @condition_block.call(result) if @condition_block
           exception = nil
         rescue RSpec::Expectations::ExpectationNotMetError => e
           exception = e
         end
-        break if condition_met
+        break if @condition_met
 
         sleep delay
       end

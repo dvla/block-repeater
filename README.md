@@ -24,8 +24,13 @@ Add the repeater and it's methods into a project
 include BlockRepeater
 ```
 
+In order to maintain parity with existing Repeater implementations you may also need to expose the repeater class itself
+```ruby 
+Repeater = BlockRepeater::Repeater
+```
+
 ### Repeat method
-The preferred way to use the repeater. Requires two blocks, the one to be executed and the one which sets the exit condition. As these are ordinary ruby blocks they can be defined using either `{ }` or `do end` syntax.
+This is the preferred way to use the repeater. It requires two blocks, the one to be executed and the one which sets the exit condition. As these are ordinary ruby blocks they can be defined using either `{ }` or `do end` syntax.
 
 ```ruby
   repeater{ call_database_method }.until{ |result| result.count.positive? }
@@ -55,8 +60,8 @@ An RSpec expectation can be used in the block for the `until` method. The expect
   end
 ```
 ### Non predefined condition methods
-Very simple conditions can be checked without using a block. This expects either one or two method names which will be called against the result of repeating the main block.
-The correct format is `until_<method name>` or `until_<method name>_becomes_<method name>`.
+Very simple conditions can be utilised without using a block. This expects either one or two method names which will be called against the result of repeating the main block.
+The required format is `until_<method name>` or `until_<method name>_becomes_<method name>`.
   
 ```ruby
   repeat{ a_method_which_returns_a_number }.until_positive?
@@ -65,18 +70,20 @@ The correct format is `until_<method name>` or `until_<method name>_becomes_<met
   repeat{ a_method_which_returns_an_array }.until_count_becomes_positive?
   #Attempts to call :count on the result of the method call, then :positive? on that result
 ````
-This is only support for two consecutive method calls, anything more complex should be written out in full in the standard manner.
+This supports two consecutive method calls, anything more complex should be written out in full in the standard manner.
 
 ### Direct class usage
-It's also possible to directly access the class as well, which has been left in to not break existing functionality. It's not recommended to combine this with the non predefined condition method pattern.
+It's also possible to directly access the Repeater class which has been left available as to not break existing functionality. It's not recommended to combine this with the non predefined condition method pattern described above.
 ```ruby
+  Repeater = BlockRepeater::Repeater
+
   Repeater.new do
     call_database_method
   end.until do |result| 
     expect(result.count).to be_positive, raise 'No result returned from databased'
   end.repeat(delay: 1, times: 5)
 ```
-In this case the optional arguments should be sent to a method called `repeat`, which is called after the second block.
+In this case any optional arguments (`times` or `delay`) must be sent to the method called `repeat`, which is called after the second block. The repeat method is mandatory to run the repeater when using it in this manner.
 
 ## Development
 

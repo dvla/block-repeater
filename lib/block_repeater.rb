@@ -12,6 +12,3 @@ require 'block_repeater/repeater'
 module BlockRepeater
   include Repeatable
 end
-
-# Repeater class can be accessed directly without namespace
-Repeater = BlockRepeater::Repeater
