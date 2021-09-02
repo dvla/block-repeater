@@ -16,12 +16,5 @@ module BlockRepeater
     def repeat(**kwargs, &block)
       Repeater.new(manual_repeat: false, **kwargs, &block)
     end
-
-    # Testing method, do not push this up
-    def call_database
-      val = [[],[],[],[{data: 'Meaningful'}]].sample
-      puts "Database returned: #{val}"
-      val
-    end
   end
 end
