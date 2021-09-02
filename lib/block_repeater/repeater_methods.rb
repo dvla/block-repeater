@@ -37,7 +37,7 @@ module RepeaterMethods
           call_if_method_responsive(result, first_match)
         end
       end
-      raise "Methods were not compatible: #{@unresponsive_errors.join(',')}" unless @unresponsive_errors.empty?
+      raise MethodUnresponsiveError, "Methods were not compatible: #{@unresponsive_errors.uniq.join(', ')}" unless @unresponsive_errors.empty?
       final_result
     else
       super
@@ -48,15 +48,18 @@ module RepeaterMethods
     method_name.match UNTIL_METHOD_REGEX || super
   end
 
-
-
-  # ISSUE: Returns nil instead of the result of the method call
   def call_if_method_responsive(value, method)
     method = method.to_sym
     if value.respond_to?(method)
       value.send(method)
     else
-      @unresponsive_errors << "#{value.inspect} of class #{value.class.name} does not respond to method #{method}"
+      @unresponsive_errors << "#{value.class.name} does not respond to method #{method}"
+    end
+  end
+
+  class MethodUnresponsiveError < StandardError
+    def initialize(msg = 'Value in repeater did not respond to given method')
+      super
     end
   end
 end

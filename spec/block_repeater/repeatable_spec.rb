@@ -1,5 +1,6 @@
 RSpec.describe BlockRepeater::Repeatable do
   include BlockRepeater::Repeatable
+  include RepeaterMethods
 
   describe '#repeat' do
 
@@ -27,7 +28,33 @@ RSpec.describe BlockRepeater::Repeatable do
       expect(result).to eql(5)
     end
 
-    # test expectation doesn't fail before final test
-    # test metaprogrammed methods (until and until_becomes)
+  end
+
+  describe('#until_<method_name>') do
+    it 'successfully calls the #positive method on a integer response' do
+      result = 0
+      repeat { result += 1 }.until_positive?
+      expect(result).to eql(1)
+    end
+
+    it 'throws an appropriate error when the #positive method is called on a string response' do
+      expect { repeat { 'a string' }.until_positive? }.to raise_exception RepeaterMethods::MethodUnresponsiveError
+    end
+  end
+
+  describe('#until_<method_name>_becomes_<method_name>') do
+    it 'successfully calls the #count and #zero methods on an array response' do
+      result = [1,2,3,4,5]
+      repeat { result.pop; result }.until_count_becomes_zero?
+      expect(result.count).to be_zero
+    end
+
+    it 'throws an appropriate error when a valid and invalid method are called a string response' do
+      expect { repeat { 'a string' }.until_upcase_becomes_positive? }.to raise_exception RepeaterMethods::MethodUnresponsiveError
+    end
+
+    it 'throws an appropriate error when two invalid methods are called a string response' do
+      expect { repeat { 'a string' }.until_not_a_method_becomes_positive? }.to raise_exception RepeaterMethods::MethodUnresponsiveError
+    end
   end
 end
