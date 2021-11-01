@@ -29,7 +29,7 @@ module BlockRepeater
     # @param delay - The amount of time to wait between each attempt
     # @param **_ - Capture any extra keyword arguments and discard them
     # @return The result of calling the main block the final time
-    def repeat(times: 25, delay: 0.2, **_)
+    def repeat(times: 25, delay: 0.2)
       result, @condition_met, exception = nil
       times.times do
         result = @repeat_block.call
@@ -60,7 +60,7 @@ module BlockRepeater
       if @manual_repeat
         self
       else
-        repeat @repeater_arguments
+        repeat **@repeater_arguments
       end
     end
   end
