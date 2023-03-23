@@ -10,7 +10,7 @@ module BlockRepeater
     # Create an instance of the Repeater class
     #
     # @param **kwargs - Capture all the keyword arguments, pass them into the Repeater
-    #   Specifically pass through times: and delay: as others will be ignored
+    #   Specifically pass through :times and :delay as others will be ignored
     # @param &block - The block of code to be repeated
     #
     def repeat(**kwargs, &block)
