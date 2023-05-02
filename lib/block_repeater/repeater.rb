@@ -75,7 +75,7 @@ module BlockRepeater
     #   :stop     - cease repeating, execute the given block
     #   :continue - execute the given block but keep repeating
     #   :defer    - execute the block only if the exception still occurs after all repeat attempts
-    def catch(behaviour: :continue, exceptions: [StandardError], &block)
+    def catch(exceptions: [StandardError], behaviour: nil,  &block)
       @anticipated_exceptions << ExceptionResponse.new(types: exceptions, behaviour: behaviour, &block)
       self
     end
@@ -84,7 +84,7 @@ module BlockRepeater
     # Same as #catch but defines default behaviours shared by all BlockRepeater instances
     # except that there is no default exception type, it must be defined
     #
-    def self.default_catch(behaviour: :continue, exceptions: [], &block)
+    def self.default_catch(exceptions: [], behaviour: nil, &block)
       @@default_exceptions << ExceptionResponse.new(types: exceptions, behaviour: behaviour, &block)
     end
 
