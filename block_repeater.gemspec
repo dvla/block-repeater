@@ -6,7 +6,7 @@ Gem::Specification.new do |spec|
   spec.name          = 'block_repeater'
   spec.version       = BlockRepeater::VERSION
   spec.authors       = ['William Bray']
-  spec.email         = ['william.bray@dvla.gov.uk']
+  spec.email         = ['wbray11@hotmail.com']
 
   spec.summary       = 'Conditionally repeat a block of code'
   spec.description   = 'Attempt a piece of code a set number of times or until a condition is met'
