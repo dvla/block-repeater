@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.summary       = 'Conditionally repeat a block of code'
   spec.description   = 'Attempt a piece of code a set number of times or until a condition is met'
   spec.homepage      = 'https://github.com/dvla/block-repeater'
-  spec.required_ruby_version = Gem::Requirement.new('>= 2.3.0')
+  spec.required_ruby_version = Gem::Requirement.new('>= 3.0.0')
   spec.license       = 'MIT'
 
   spec.metadata["homepage_uri"] = spec.homepage
