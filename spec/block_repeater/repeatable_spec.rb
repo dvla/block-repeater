@@ -84,7 +84,10 @@ RSpec.describe BlockRepeater::Repeatable do
       attempts = 0
       catches = 0
 
-      repeat(times: 3) { attempts += 1; raise NameError }
+      repeat(times: 3) do
+        attempts += 1
+        raise NameError
+      end
         .catch(exceptions: NameError, behaviour: :continue) { catches += 1 }
         .until { true }
 
@@ -96,7 +99,10 @@ RSpec.describe BlockRepeater::Repeatable do
       attempts = 0
       catches = 0
 
-      repeat(times: 3) { attempts += 1; raise NameError }
+      repeat(times: 3) do
+        attempts += 1
+        raise NameError
+      end
         .catch(exceptions: NameError, behaviour: :defer) { catches += 1 }
         .until { true }
 
@@ -108,7 +114,10 @@ RSpec.describe BlockRepeater::Repeatable do
       attempts = 0
       catches = 0
 
-      repeat(times: 3) { attempts += 1; raise NameError }
+      repeat(times: 3) do
+        attempts += 1
+        raise NameError
+      end
         .catch(exceptions: NameError, behaviour: :stop) { catches += 1 }
         .until { true }
 
@@ -118,7 +127,7 @@ RSpec.describe BlockRepeater::Repeatable do
 
     it 'will execute code triggered by a later exception in the chain' do
       triggered = false
-      
+
       repeat(times: 3) { raise IOError }
         .catch(exceptions: [NameError]) { triggered = false }
         .catch(exceptions: [IOError]) { triggered = true }
@@ -147,5 +156,29 @@ RSpec.describe BlockRepeater::Repeatable do
   end
 
   describe '#default_catch' do
+    it 'allows pre-defined exception handling logic to apply without calling #catch' do
+      result = nil
+      BlockRepeater::Repeater.default_catch(exceptions: ThreadError, behaviour: :defer) do
+        result = 'Default logic triggered'
+      end
+
+      repeat(times: 3) { raise ThreadError }
+        .until { true }
+
+      expect(result).to eq 'Default logic triggered'
+    end
+
+    it 'lets default logic be ignored in favour of specific logic' do
+      result = nil
+      BlockRepeater::Repeater.default_catch(exceptions: ThreadError, behaviour: :defer) do
+        result = 'Default logic triggered'
+      end
+
+      repeat(times: 3) { raise ThreadError }
+        .catch(exceptions: ThreadError) { result = 'Non-default logic triggered' }
+        .until { true }
+
+      expect(result).to eq 'Non-default logic triggered'
+    end
   end
 end

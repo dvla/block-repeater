@@ -54,7 +54,7 @@ module BlockRepeater
           end
 
           break if matched_response.behaviour == :stop
-        end 
+        end
 
         break if @condition_met
 
