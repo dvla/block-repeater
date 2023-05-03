@@ -30,7 +30,7 @@ RSpec.describe BlockRepeater::Repeatable do
     end
   end
 
-  describe('#until_<method_name>') do
+  describe '#until_<method_name>' do
     it 'successfully calls the #positive method on a integer response' do
       result = 0
       repeat { result += 1 }.until_positive?
@@ -42,7 +42,7 @@ RSpec.describe BlockRepeater::Repeatable do
     end
   end
 
-  describe('#until_<method_name>_becomes_<method_name>') do
+  describe '#until_<method_name>_becomes_<method_name>' do
     it 'successfully calls the #count and #zero methods on an array response' do
       result = [1, 2, 3, 4, 5]
       repeat do
@@ -67,5 +67,85 @@ RSpec.describe BlockRepeater::Repeatable do
         end.until_not_a_method_becomes_positive?
       end.to raise_exception RepeaterMethods::MethodUnresponsiveError
     end
+  end
+
+  describe '#catch' do
+    it 'will excute code triggerred a specific defined exception' do
+      triggered = false
+
+      repeat(times: 3) { raise IOError }
+        .catch(exceptions: [IOError]) { triggered = true }
+        .until { true }
+
+      expect(triggered).to be_truthy
+    end
+
+    it 'will allow repetition attempts to finish if the behaviour is defined as :contine ' do
+      attempts = 0
+      catches = 0
+
+      repeat(times: 3) { attempts += 1; raise NameError }
+        .catch(exceptions: NameError, behaviour: :continue) { catches += 1 }
+        .until { true }
+
+      expect(attempts).to eq 3
+      expect(catches).to eq 3
+    end
+
+    it 'will execute the block only after all attempts have been made if the behaviour is defined as :defer ' do
+      attempts = 0
+      catches = 0
+
+      repeat(times: 3) { attempts += 1; raise NameError }
+        .catch(exceptions: NameError, behaviour: :defer) { catches += 1 }
+        .until { true }
+
+      expect(attempts).to eq 3
+      expect(catches).to eq 1
+    end
+
+    it 'will execute the block and prevent further attempts if the behaviour is defined as :stop ' do
+      attempts = 0
+      catches = 0
+
+      repeat(times: 3) { attempts += 1; raise NameError }
+        .catch(exceptions: NameError, behaviour: :stop) { catches += 1 }
+        .until { true }
+
+      expect(attempts).to eq 1
+      expect(catches).to eq 1
+    end
+
+    it 'will execute code triggered by a later exception in the chain' do
+      triggered = false
+      
+      repeat(times: 3) { raise IOError }
+        .catch(exceptions: [NameError]) { triggered = false }
+        .catch(exceptions: [IOError]) { triggered = true }
+        .until { true }
+
+      expect(triggered).to be_truthy
+    end
+
+    it 'will execute code triggered by a child of a defined exception' do
+      triggered = false
+
+      repeat(times: 3) { raise IOError }
+        .catch(exceptions: [StandardError]) { triggered = true }
+        .until { true }
+
+      expect(triggered).to be_truthy
+    end
+
+    it 'will not execute code if a non-defined exception has been thrown' do
+      expect do
+        repeat(times: 3) { raise IOError }
+          .catch(exceptions: [NameError]) { nil }
+          .until { true }
+      end.to raise_exception IOError
+    end
+  end
+
+  describe '#default_catch' do
   end
 end

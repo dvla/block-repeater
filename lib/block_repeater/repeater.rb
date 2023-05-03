@@ -44,9 +44,8 @@ module BlockRepeater
           @condition_met = @condition_block.call(result) if @condition_block
           deferred_exception = nil
         rescue *exception_types => e
-          exceptions = anticipated_exception_types.include?(e) ? @anticipated_exceptions : @@default_exceptions
-          matched_response = exceptions.detect { |expected| expected.types.any? { |exception| e.class <= exception } }
-
+          exceptions = anticipated_exception_types.any?{ |ex| e.class <= ex } ? @anticipated_exceptions : @@default_exceptions
+          matched_response = exceptions.detect { |expected| expected.types.any? { |ex| e.class <= ex } }
           if matched_response.behaviour == :defer
             deferred_exception = matched_response
             deferred_exception.actual = e
@@ -55,7 +54,7 @@ module BlockRepeater
           end
 
           break if matched_response.behaviour == :stop
-        end
+        end 
 
         break if @condition_met
 
@@ -76,7 +75,7 @@ module BlockRepeater
     #   :stop     - cease repeating, execute the given block
     #   :continue - execute the given block but keep repeating
     #   :defer    - execute the block only if the exception still occurs after all repeat attempts
-    def catch(exceptions: [StandardError], behaviour: nil, &block)
+    def catch(exceptions: [StandardError], behaviour: :defer, &block)
       @anticipated_exceptions << ExceptionResponse.new(types: exceptions, behaviour: behaviour, &block)
       self
     end
@@ -84,7 +83,7 @@ module BlockRepeater
     ##
     # Same as #catch but defines default behaviours shared by all BlockRepeater instances
     # except that there is no default exception type, it must be defined
-    def self.default_catch(exceptions: [], behaviour: nil, &block)
+    def self.default_catch(exceptions: [], behaviour: :defer, &block)
       @@default_exceptions << ExceptionResponse.new(types: exceptions, behaviour: behaviour, &block)
     end
 
