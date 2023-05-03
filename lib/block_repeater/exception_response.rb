@@ -1,12 +1,17 @@
+# frozen_string_literal: true
+
+##
+# Store an execute behaviour in response to an exception being raised
 class ExceptionResponse
   attr_accessor :types, :response, :behaviour, :actual
-  BEHAVIOURS = [:continue, :stop, :defer]
+
+  BEHAVIOURS = %i[continue stop defer].freeze
 
   def initialize(types: [], behaviour: :defer, &block)
     raise "Exception handling behaviour '#{behaviour}' not recognised" unless BEHAVIOURS.include? behaviour
-    raise "No exception types provided" if types.count == 0
+    raise 'No exception types provided' if [*types].count.zero?
 
-    @types = types
+    @types = [*types]
     @behaviour = behaviour
     @response = block || default_proc
   end

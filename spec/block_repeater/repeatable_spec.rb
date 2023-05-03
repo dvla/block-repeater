@@ -1,9 +1,10 @@
+# frozen_string_literal: true
+
 RSpec.describe BlockRepeater::Repeatable do
   include BlockRepeater::Repeatable
   include RepeaterMethods
 
   describe '#repeat' do
-
     it 'returns once the exit condition is met' do
       result = 0
       repeat { result += 1 }.until { result == 10 }
@@ -24,10 +25,9 @@ RSpec.describe BlockRepeater::Repeatable do
 
     it 'only repeats the specified number of times' do
       result = 0
-      repeat(times: 5) { result += 1 }.until{ result == 10 }
+      repeat(times: 5) { result += 1 }.until { result == 10 }
       expect(result).to eql(5)
     end
-
   end
 
   describe('#until_<method_name>') do
@@ -44,17 +44,28 @@ RSpec.describe BlockRepeater::Repeatable do
 
   describe('#until_<method_name>_becomes_<method_name>') do
     it 'successfully calls the #count and #zero methods on an array response' do
-      result = [1,2,3,4,5]
-      repeat { result.pop; result }.until_count_becomes_zero?
+      result = [1, 2, 3, 4, 5]
+      repeat do
+        result.pop
+        result
+      end.until_count_becomes_zero?
       expect(result.count).to be_zero
     end
 
     it 'throws an appropriate error when a valid and invalid method are called a string response' do
-      expect { repeat { 'a string' }.until_upcase_becomes_positive? }.to raise_exception RepeaterMethods::MethodUnresponsiveError
+      expect do
+        repeat do
+          'a string'
+        end.until_upcase_becomes_positive?
+      end.to raise_exception RepeaterMethods::MethodUnresponsiveError
     end
 
     it 'throws an appropriate error when two invalid methods are called a string response' do
-      expect { repeat { 'a string' }.until_not_a_method_becomes_positive? }.to raise_exception RepeaterMethods::MethodUnresponsiveError
+      expect do
+        repeat do
+          'a string'
+        end.until_not_a_method_becomes_positive?
+      end.to raise_exception RepeaterMethods::MethodUnresponsiveError
     end
   end
 end

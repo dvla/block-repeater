@@ -4,9 +4,10 @@ require 'block_repeater/repeater_methods'
 require 'block_repeater/exception_response'
 
 ##
-# A class which repeatedly executes a block of code until a given condition is met or a timeout is reached
-#
+# A way to repeatedly execute a block of code until a given condition is met or a timeout is reached
 module BlockRepeater
+  ##
+  # The class which governs when to stop repeating based on condition or timeout
   class Repeater
     include RepeaterMethods
     @@default_exceptions = []
@@ -14,7 +15,7 @@ module BlockRepeater
     ##
     # Prepare the Repeater to take the initial block to be repeated
     #
-    # @param manual_repeat - Determines whether the repeat method needs to called manually, used by the Repeatable module
+    # @param manual_repeat - Determines whether the repeat method is called manually, used by the Repeatable module
     # @param **kwargs - Capture other arguments in the situation where repeat isn't being called manually
     # @param &block - The block of code to be repeated
     def initialize(manual_repeat: true, **kwargs, &block)
@@ -33,10 +34,9 @@ module BlockRepeater
     # @return The result of calling the main block the final time
     def repeat(times: 25, delay: 0.2, **_)
       result, @condition_met, deferred_exception = nil
-      anticipated_exception_types = @anticipated_exceptions.map{ |ae| ae.types }.flatten
-      default_exception_types = @@default_exceptions.map{ |de| de.types }.flatten
+      anticipated_exception_types = @anticipated_exceptions.map(&:types).flatten
+      default_exception_types = @@default_exceptions.map(&:types).flatten
       exception_types = anticipated_exception_types + default_exception_types
-      
 
       times.times do
         begin
@@ -45,10 +45,10 @@ module BlockRepeater
           deferred_exception = nil
         rescue *exception_types => e
           exceptions = anticipated_exception_types.include?(e) ? @anticipated_exceptions : @@default_exceptions
-          matched_response = exceptions.detect{ |expected| expected.types.any? { |exception| e.class <= exception } }
+          matched_response = exceptions.detect { |expected| expected.types.any? { |exception| e.class <= exception } }
 
           if matched_response.behaviour == :defer
-            deferred_exception = matched_response 
+            deferred_exception = matched_response
             deferred_exception.actual = e
           else
             matched_response.execute(e)
@@ -58,10 +58,11 @@ module BlockRepeater
         end
 
         break if @condition_met
+
         sleep delay
       end
 
-      deferred_exception.execute if deferred_exception
+      deferred_exception&.execute
 
       result
     end
@@ -75,7 +76,7 @@ module BlockRepeater
     #   :stop     - cease repeating, execute the given block
     #   :continue - execute the given block but keep repeating
     #   :defer    - execute the block only if the exception still occurs after all repeat attempts
-    def catch(exceptions: [StandardError], behaviour: nil,  &block)
+    def catch(exceptions: [StandardError], behaviour: nil, &block)
       @anticipated_exceptions << ExceptionResponse.new(types: exceptions, behaviour: behaviour, &block)
       self
     end
@@ -83,7 +84,6 @@ module BlockRepeater
     ##
     # Same as #catch but defines default behaviours shared by all BlockRepeater instances
     # except that there is no default exception type, it must be defined
-    #
     def self.default_catch(exceptions: [], behaviour: nil, &block)
       @@default_exceptions << ExceptionResponse.new(types: exceptions, behaviour: behaviour, &block)
     end
@@ -99,10 +99,8 @@ module BlockRepeater
       if @manual_repeat
         self
       else
-        repeat **@repeater_arguments
+        repeat(**@repeater_arguments)
       end
     end
   end
 end
-
-

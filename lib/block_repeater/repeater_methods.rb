@@ -27,17 +27,21 @@ module RepeaterMethods
       second_match = Regexp.last_match(2)
       third_match = Regexp.last_match(3)
 
-      if second_match && third_match
-        final_result = self.until do |result|
-          call_output = call_if_method_responsive(result, second_match)
-          call_if_method_responsive(call_output, third_match) if @unresponsive_errors.empty?
-        end
-      else
-        final_result = self.until do |result|
-          call_if_method_responsive(result, first_match)
-        end
+      final_result = if second_match && third_match
+                       self.until do |result|
+                         call_output = call_if_method_responsive(result, second_match)
+                         call_if_method_responsive(call_output, third_match) if @unresponsive_errors.empty?
+                       end
+                     else
+                       self.until do |result|
+                         call_if_method_responsive(result, first_match)
+                       end
+                     end
+      unless @unresponsive_errors.empty?
+        raise MethodUnresponsiveError,
+              "Methods were not compatible: #{@unresponsive_errors.uniq.join(', ')}"
       end
-      raise MethodUnresponsiveError, "Methods were not compatible: #{@unresponsive_errors.uniq.join(', ')}" unless @unresponsive_errors.empty?
+
       final_result
     else
       super
@@ -57,6 +61,8 @@ module RepeaterMethods
     end
   end
 
+  ##
+  # Custom exception for when the repeater response does not respond to a given method
   class MethodUnresponsiveError < StandardError
     def initialize(msg = 'Value in repeater did not respond to given method')
       super

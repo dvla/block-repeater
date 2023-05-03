@@ -12,10 +12,10 @@ Gem::Specification.new do |spec|
   spec.description   = 'Attempt a piece of code a set number of times or until a condition is met'
   spec.homepage      = 'https://github.com/dvla/block-repeater'
   spec.required_ruby_version = Gem::Requirement.new('>= 3.0.0')
-  spec.license       = 'MIT'
+  spec.license = 'MIT'
 
-  spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "https://github.com/dvla/block-repeater"
+  spec.metadata['homepage_uri'] = spec.homepage
+  spec.metadata['source_code_uri'] = 'https://github.com/dvla/block-repeater'
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
