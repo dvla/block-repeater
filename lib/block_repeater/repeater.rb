@@ -34,7 +34,7 @@ module BlockRepeater
     def repeat(times: 25, delay: 0.2, **_)
       result, @condition_met, deferred_exception = nil
       anticipated_exception_types = @anticipated_exceptions.map{ |ae| ae.types }.flatten
-      default_exception_types = @@default_exceptions.map{ |ae| ae.types }.flatten
+      default_exception_types = @@default_exceptions.map{ |de| de.types }.flatten
       exception_types = anticipated_exception_types + default_exception_types
       
 
@@ -100,18 +100,6 @@ module BlockRepeater
         self
       else
         repeat **@repeater_arguments
-      end
-    end
-
-    private
-
-    def handle_exception(exception:, default: false)
-      exception_list = default ? @@default_exceptions : @anticipated_exceptions
-      matched_response = exception_list.detect{ |expected| expected.types.any? { |exception| e.class <= exception } }
-      matched_response.execute(e) if matched_response.behaviour != :defer
-      if matched_response.behaviour == :defer
-        deferred_exception = matched_response 
-        deferred_exception.actual = e
       end
     end
   end
