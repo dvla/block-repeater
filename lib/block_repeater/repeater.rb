@@ -44,7 +44,13 @@ module BlockRepeater
           @condition_met = @condition_block.call(result) if @condition_block
           deferred_exception = nil
         rescue *exception_types => e
-          exceptions = anticipated_exception_types.any?{ |ex| e.class <= ex } ? @anticipated_exceptions : @@default_exceptions
+          exceptions = if anticipated_exception_types.any? do |ex|
+                            e.class <= ex
+                          end
+                         @anticipated_exceptions
+                       else
+                         @@default_exceptions
+                       end
           matched_response = exceptions.detect { |expected| expected.types.any? { |ex| e.class <= ex } }
           if matched_response.behaviour == :defer
             deferred_exception = matched_response

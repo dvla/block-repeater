@@ -4,7 +4,7 @@
 # Additional methods for the Repeater class
 #
 module RepeaterMethods
-  UNTIL_METHOD_REGEX = /until_((.*)_becomes_(.*)|(.*))/.freeze
+  UNTIL_METHOD_REGEX = /until_((.*)_becomes_(.*)|(.*))/
 
   ##
   # If a method in the correct format is provided it will be converted into the conditional block for the Repeater class
