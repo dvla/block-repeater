@@ -33,10 +33,10 @@ Repeater = BlockRepeater::Repeater
 This is the preferred way to use the repeater. It requires two blocks, the one to be executed and the one which sets the exit condition. As these are ordinary ruby blocks they can be defined using either `{ }` or `do end` syntax.
 
 ```ruby
-  repeater{ call_database_method }.until{ |result| result.count.positive? }
+  repeat { call_database_method }.until{ |result| result.count.positive? }
 ```
 ```ruby
-  repeater do
+  repeat do
     call_database_method
   end.until do |result| 
     result.count.positive? 
@@ -47,13 +47,53 @@ The repeater also takes two parameters:
  - `delay:` is how long in seconds the repeater will wait between attempts (defaults to 0.2 seconds)
  - `times:` is how many attempts the repeater will make before giving up (defaults to 25)
  ```ruby
-   repeater(delay: 0.5, times: 10){ call_database_method }.until{ |result| result.count.positive? }
+   repeat (delay: 0.5, times: 10){ call_database_method }.until{ |result| result.count.positive? }
  ```
 
-### RSpec functionality
-An RSpec expectation can be used in the block for the `until` method. The expectation will be attempted each try, but the exception will only be raised if it has still failed once the number or attempts has been reached.
+### Exception Handling
+Using the `catch` method you can define how the repeater should respond to specific exception types. To do this you need to provide a list of exceptions to catch, a block of code which will be performed, and an option for how to trigger than block of code.
+
+**IMPORTANT: Any `catch` blocks must be declared _before_ the `until` block**
+
+ The following code has custom behaviour for a variety of error types, stopping if it get's an IOError but otherwise continuing without halting the repeater:
 ```ruby
-  repeater do
+  repeat do
+    call_database_method
+  end.catch(exceptions: IOError, behaviour: :stop) do |e|
+    puts "Error in IO operations: #{e}"
+  end.catch(behaviour: :continue) do |e|
+    puts "Error thrown: #{e}"
+  end.until do |result|
+    result.count.positive?
+  end
+```
+`exceptions` can take either a single exception type or an array. If not provided it will default to `StandardError`.
+
+There are three supported behaviours:
+- `:continue` executes the provided block but doesn't stop the repeater
+- `:stop` executes the provided block and then stops the repeater
+- `:defer` only executes the provided block if the exception is still occurring on the final attempt. This is the default option.
+
+If no block is provided it will default to attempting to raise the exception.
+
+### Default Exception Handling Behaviour
+You can also define default exception handling behaviour which all repeaters in a project will use. A `catch` block on a repeater will override default behaviour for the same exception type. In this following example all repeaters will automatically catch `IOErrors` and raise them if they're still occurring once the repeater has completed its attempts.
+
+```ruby
+BlockRepeater::Repeater.default_catch(exceptions: [IOError], behaviour: :defer) do |e|
+  puts 'An IOError occurred'
+  e.raise
+end
+```
+A common use-case for default exception handling is if using a gem such as RSpec, where you may want to handle failed expectations in a uniform manner. To do so you need define the default behaviour first, in a place such as a `env.rb` file or similar:
+```ruby
+BlockRepeater::Repeater.default_catch(exceptions: [RSpec::Expectations::ExpectationNotMetError], behaviour: :defer) do |e|
+  e.raise
+end
+```
+Then an RSpec expectation can be used in the block for the `until` method. The expectation will be attempted each try, but the exception will only be raised if it has still failed once the number or attempts has been reached.
+```ruby
+  repeat do
     call_database_method
   end.until do |result| 
     expect(result.count).to be_positive, raise 'No result returned from databased'
@@ -64,16 +104,16 @@ Very simple conditions can be utilised without using a block. This expects eithe
 The required format is `until_<method name>` or `until_<method name>_becomes_<method name>`.
   
 ```ruby
-  repeat{ a_method_which_returns_a_number }.until_positive?
+  repeat { a_method_which_returns_a_number }.until_positive?
   #Attempts to call the :positive? method on the result of the method call
 
-  repeat{ a_method_which_returns_an_array }.until_count_becomes_positive?
+  repeat { a_method_which_returns_an_array }.until_count_becomes_positive?
   #Attempts to call :count on the result of the method call, then :positive? on that result
-````
-This supports two consecutive method calls, anything more complex should be written out in full in the standard manner.
+```
+This supports up to two consecutive method calls, anything more complex should be written out in full in the standard manner.
 
 ### Direct class usage
-It's also possible to directly access the Repeater class which has been left available as to not break existing functionality. It's not recommended to combine this with the non predefined condition method pattern described above.
+It's also possible to directly access the Repeater class which has been left available as to provide backwards compatibility with older implementations of BlockRepeater. It's not recommended to combine this with the non predefined condition method pattern described above.
 ```ruby
   Repeater = BlockRepeater::Repeater
 
