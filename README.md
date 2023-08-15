@@ -50,6 +50,22 @@ The repeater also takes two parameters:
    repeat (delay: 0.5, times: 10){ call_database_method }.until{ |result| result.count.positive? }
  ```
 
+### Backoff method
+This is a slightly different take on the preferred `repeat` method. It retries a call whilst exponentially increasing the wait time between each iteration until a timeout is reached.
+
+```ruby
+repeat do
+  call_method
+end.until do |result|
+  result
+end.backoff(timeout: 10, initial_wait: 0.5, multiplier: 2)
+```
+
+`backoff` takes three paramaters:
+- `timeout:` is how long you want your repeater to run
+- `initial_wait:` is how long you want to pause before your first retry
+- `multiplier:` is the rate at which you increase the wait time between each iteration
+
 ### Exception Handling
 Using the `catch` method you can define how the repeater should respond to specific exception types. To do this you need to provide a list of exceptions to catch, a block of code which will be performed, and an option for how to trigger than block of code.
 
