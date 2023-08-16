@@ -94,7 +94,7 @@ module BlockRepeater
         duration = Time.now - start_time
 
         if duration > timeout
-          LOGGER.warn "Timeout reached on fallback - Duration: #{duration} - Timeout: #{timeout} seconds"
+          LOGGER.debug "Timeout reached on fallback - Duration: #{duration} - Timeout: #{timeout} seconds"
         end
 
         break if condition_met || duration > timeout
