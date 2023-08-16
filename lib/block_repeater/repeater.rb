@@ -45,8 +45,8 @@ module BlockRepeater
           deferred_exception = nil
         rescue *exception_types => e
           exceptions = if anticipated_exception_types.any? do |ex|
-                            e.class <= ex
-                          end
+            e.class <= ex
+          end
                          @anticipated_exceptions
                        else
                          @@default_exceptions
@@ -69,6 +69,39 @@ module BlockRepeater
 
       deferred_exception&.execute
 
+      result
+    end
+
+    # Retry a call whilst exponentially increasing the wait time between each iteration until a timeout is reached
+    # @param [Integer] `timeout` is the max amount wait of time you wish to try the action
+    # @param [Integer] `initial_wait` is the initial wait time to retry the action
+    # @param [Integer] `multiplier` is the rate at which you increase the wait time between each iteration
+    def backoff(timeout: 10, initial_wait: 0.1, multiplier: 2)
+      raise StandardError, 'Multiplier cannot be less than 1.1' if multiplier < 1.1
+
+      condition_met = nil
+      result = nil
+
+      current_sleep_seconds = initial_wait
+      start_time = Time.now
+
+      until current_sleep_seconds >= timeout
+        result = @repeat_block.call
+        condition_met = @condition_block.call(result) if @condition_block
+
+        duration = Time.now - start_time
+
+        break if condition_met || duration > timeout
+
+        # calculating exponential increase
+        current_sleep_seconds *= multiplier
+        # how long the total duration will be after the next sleep
+        projected_duration = current_sleep_seconds + duration
+        # if projected duration exceeds the timeout, reduce time for next sleep to allow one final call
+        current_sleep_seconds = (timeout - duration) if projected_duration > timeout
+
+        sleep(current_sleep_seconds)
+      end
       result
     end
 
