@@ -93,11 +93,14 @@ module BlockRepeater
 
         duration = Time.now - start_time
 
-        LOGGER.warn "Timeout reached on fallback - Duration: #{duration} - Timeout: #{timeout} seconds" if duration > timeout
+        if duration > timeout
+          LOGGER.warn "Timeout reached on fallback - Duration: #{duration} - Timeout: #{timeout} seconds"
+        end
+
         break if condition_met || duration > timeout
 
         # calculating exponential increase
-        current_sleep_seconds = current_sleep_seconds * multiplier
+        current_sleep_seconds *= multiplier
         # how long the total duration will be after the next sleep
         projected_duration = current_sleep_seconds + duration
         # if projected duration exceeds the timeout, reduce time for next sleep to allow one final call
