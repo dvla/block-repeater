@@ -2,7 +2,6 @@
 
 require 'block_repeater/repeater_methods'
 require 'block_repeater/exception_response'
-require 'logger'
 
 ##
 # A way to repeatedly execute a block of code until a given condition is met or a timeout is reached
@@ -10,7 +9,6 @@ module BlockRepeater
   ##
   # The class which governs when to stop repeating based on condition or timeout
   class Repeater
-    LOGGER = Logger.new($stdout)
     include RepeaterMethods
     @@default_exceptions = []
 
@@ -92,10 +90,6 @@ module BlockRepeater
         condition_met = @condition_block.call(result) if @condition_block
 
         duration = Time.now - start_time
-
-        if duration > timeout
-          LOGGER.debug "Timeout reached on fallback - Duration: #{duration} - Timeout: #{timeout} seconds"
-        end
 
         break if condition_met || duration > timeout
 
