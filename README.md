@@ -98,13 +98,13 @@ You can also define default exception handling behaviour which all repeaters in 
 ```ruby
 BlockRepeater::Repeater.default_catch(exceptions: [IOError], behaviour: :defer) do |e|
   puts 'An IOError occurred'
-  e.raise
+  raise e
 end
 ```
 A common use-case for default exception handling is if using a gem such as RSpec, where you may want to handle failed expectations in a uniform manner. To do so you need define the default behaviour first, in a place such as a `env.rb` file or similar:
 ```ruby
 BlockRepeater::Repeater.default_catch(exceptions: [RSpec::Expectations::ExpectationNotMetError], behaviour: :defer) do |e|
-  e.raise
+  raise e
 end
 ```
 Then an RSpec expectation can be used in the block for the `until` method. The expectation will be attempted each try, but the exception will only be raised if it has still failed once the number or attempts has been reached.
